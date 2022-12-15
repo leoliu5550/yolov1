@@ -2,3 +2,5 @@ DATA/test*
 DATA/train*
 DATA/valid*
 .ipynb_checkpoints
+*yolov1_torch.code-workspace
+.vscode*

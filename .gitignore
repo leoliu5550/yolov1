@@ -5,3 +5,4 @@ DATA/valid*
 *yolov1_torch.code-workspace
 .vscode*
 test/*
+.pytest_cache*

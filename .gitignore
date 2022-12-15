@@ -1,1 +1,3 @@
-DATA/*
+DATA/test*
+DATA/train*
+DATA/valid*

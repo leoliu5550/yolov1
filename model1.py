@@ -38,7 +38,6 @@ class CNNBlock(nn.Module):
         x = self.leakyrelu(x)
         return x
 
-
 class Yolov1(nn.Module):
     def __init__(self,in_channels = 3,**kwargs):
         super(Yolov1,self).__init__()
@@ -58,13 +57,56 @@ class Yolov1(nn.Module):
         in_channels = self.in_channels
         for x in architecture:
             if type(x) == tuple:
-                layers += [CNNBlock(
-                    in_channels=in_channels,
-                    out_channels=x[1],
-                    kernel_size =x[0],
-                    stride = x[2],
-                    padding = x[3],)]
-            elif type(x) == "M":
-                layers+=[nn.MaxPool2d(kernel_size=(2,2),stride=2)]
+                layers += [
+                    CNNBlock(
+                        in_channels=in_channels,
+                        out_channels=x[1],
+                        kernel_size =x[0],
+                        stride = x[2],
+                        padding = x[3])]
+                in_channels = x[1]
+
+            elif type(x) == str:
+                layers+=[
+                    nn.MaxPool2d(kernel_size=(2,2),stride=2)
+                    ]
+
             elif type(x) == list:
-                
+                conv1 = x[0]
+                conv2 = x[1]
+                num_repeats = x[2]
+
+                for _ in range(num_repeats):
+                    layers +=[
+                        CNNBlock(
+                            in_channels=in_channels,
+                            out_channels=conv1[1],
+                            kernel_size = conv1[0],
+                            stride=conv1[2],
+                            padding = conv1[3]
+                        )]
+                    layers +=[
+                        CNNBlock(
+                            in_channels=conv1[1],
+                            out_channels=conv2[1],
+                            kernel_size = conv2[0],
+                            stride = conv2[2],
+                            padding = conv2[3]
+                        )]
+                    in_channels = conv2[1]
+
+        return nn.Sequential(*layers)
+
+    def _create_fcs(self,split_size,num_boxes,num_classes):
+        S = split_size
+        B = num_boxes
+        C = num_classes
+        model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(1024 * S * S,1024),
+            nn.Dropout(0.5),
+            nn.LeakyReLU(0.1),
+            nn.Linear(1024,S * S *(C+B*5)),
+        )
+        return model
+
